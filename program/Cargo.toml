@@ -1,0 +1,11 @@
+[workspace]
+[package]
+version = "0.1.0"
+name = "zkaf-program"
+edition = "2021"
+
+[dependencies]
+sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git" }
+tlsn-substrings-verifier = { path = "../tlsn-substrings-verifier" }
+serde = "1.0"
+serde_json = "1.0.107"

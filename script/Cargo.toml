@@ -1,0 +1,18 @@
+[workspace]
+[package]
+version = "0.1.0"
+name = "zkaf-script"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0.200", features = ["derive"] }
+serde_json = "1.0.116"
+sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git" }
+tlsn-substrings-verifier = { path = "../tlsn-substrings-verifier" }
+
+[build-dependencies]
+sp1-helper = { git = "https://github.com/succinctlabs/sp1.git" }
+p256 = { version = "0.13.2", features = ["ecdsa"] }
+serde = { version = "1.0.200", features = ["derive"] }
+serde_json = "1.0.116"
+tlsn-core = { git = "https://github.com/tlsnotary/tlsn", rev = "6152883" }
