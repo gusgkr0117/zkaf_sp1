@@ -1,6 +1,8 @@
 //! A simple script to generate and verify the proof of a given program.
 
 use serde::{Deserialize, Serialize};
+use sp1_core::utils::setup_logger;
+use sp1_prover::utils::get_cycles;
 use sp1_sdk::{ProverClient, SP1ProofWithPublicValues, SP1Stdin};
 use tlsn_substrings_verifier::{
     self,
@@ -26,10 +28,19 @@ fn main() {
         serde_json::to_string(&proof_params.substrings).unwrap(),
     );
 
+    let input3 = std::fs::read_to_string("../inputs/random_values.json").unwrap();
+
     stdin.write(&input1);
     stdin.write(&input2);
+    stdin.write(&input3);
+
+    setup_logger();
+
+    // let cycles = get_cycles(&ELF, &stdin);
+    // println!("Total cycles : {}", cycles);
+
     let client = ProverClient::new();
-    //let mut public_values = client.execute(ELF, stdin).unwrap();
+    // let mut public_values = client.execute(ELF, stdin).unwrap();
     let (pk, vk) = client.setup(ELF);
     let proof = client.prove_groth16(&pk, stdin).expect("proving failed");
 
@@ -48,7 +59,7 @@ fn main() {
         .save("groth16-proof-with-pis.json")
         .expect("saving proof failed");
 
-    // println!("successfully generated and verified proof for the program!")
+    println!("successfully generated and verified proof for the program!")
 }
 
 #[cfg(test)]

@@ -4,17 +4,35 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
 
+use mpz_circuits::types::ValueType;
+use mpz_core::hash::Hash;
+use mpz_garble_core::{encoding, EncodedValue, Encoder};
 use p256::pkcs8::DecodePublicKey;
 use std::str;
-use tlsn_core::{
-    proof::{SessionProof, SubstringsProof, TlsProof},
-    SessionHeader,
-};
+use tlsn_core::proof::{SessionProof, TlsProof};
+use tlsn_substrings_verifier::proof::SessionHeader;
+use tlsn_substrings_verifier::proof::{SubstringsProof, SubstringsProofError};
+use utils::range::{RangeDisjoint, RangeSet, RangeUnion, ToRangeSet};
 
 #[derive(Serialize, Deserialize)]
 struct ZkParam {
     header: SessionHeader,
     substrings: SubstringsProof,
+}
+
+fn precompute_random_values(
+    header: &SessionHeader,
+    substrings: &SubstringsProof,
+) -> Result<(), SubstringsProofError> {
+    let random_values_path = "../inputs/random_values.json";
+    let path = Path::new(random_values_path);
+    let mut file = File::create(path).unwrap();
+
+    let encoding_list = substrings.clone().extract_random_values(header).unwrap();
+    let test = serde_json::to_string(&encoding_list).unwrap();
+
+    file.write_all(test.as_bytes()).unwrap();
+    Ok(())
 }
 
 fn build_proof() -> Result<(), Box<dyn std::error::Error>> {
@@ -44,9 +62,20 @@ fn build_proof() -> Result<(), Box<dyn std::error::Error>> {
         ..
     } = session;
 
+    let dummy = serde_json::to_string(&substrings).unwrap();
+    let my_substrings: SubstringsProof = serde_json::from_str(dummy.as_str()).unwrap();
+
+    let dummy = serde_json::to_string(&header).unwrap();
+    let my_header: SessionHeader = serde_json::from_str(dummy.as_str()).unwrap();
+
+    precompute_random_values(&my_header, &my_substrings);
+
     // type conversion occurs here
     // we need to convert from the tlsn core definitions to the definitions from the verifier
-    let params = ZkParam { header, substrings };
+    let params = ZkParam {
+        header: my_header,
+        substrings: my_substrings,
+    };
 
     let json = serde_json::to_string(&params)?;
 
@@ -71,5 +100,5 @@ fn notary_pubkey() -> p256::PublicKey {
 
 fn main() {
     let _ = build_proof();
-    // build_program("../program")
+    //build_program("../program")
 }

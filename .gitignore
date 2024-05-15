@@ -17,3 +17,6 @@ pgo-data.profdata
 
 # Program ELF
 program/elf/*
+
+elf/
+inputs/*
