@@ -203,7 +203,7 @@ impl SubstringsProof {
     pub fn verify_with_precompute(
         self,
         header: &SessionHeader,
-        encodings_list: Vec<Vec<EncodedValue<Full>>>,
+        encodings_list: HashMap<CommitmentId, Vec<EncodedValue<Full>>>,
     ) -> Result<(RedactedTranscript, RedactedTranscript), SubstringsProofError> {
         let Self {
             openings,
@@ -216,31 +216,12 @@ impl SubstringsProof {
         let mut recv = vec![0u8; header.recv_len()];
         let mut sent_ranges = RangeSet::default();
         let mut recv_ranges = RangeSet::default();
-        let mut total_opened = 0u128;
 
-        for (idx, (id, (info, opening))) in openings.iter().enumerate() {
+        for (id, (info, opening)) in openings {
             // // Compute the expected hash of the commitment to make sure it is
             // // present in the merkle tree.
             indices.push(id.to_inner() as usize);
-            expected_hashes.push(opening.recover(&encodings_list[idx]).hash());
-            // // Make sure the length of data from the opening matches the commitment.
-            // let mut data = opening.into_data();
-            // if data.len() != ranges.len() {
-            //     return Err(SubstringsProofError::InvalidOpening(id));
-            // }
-
-            // let dest = match direction {
-            //     Direction::Sent => &mut sent,
-            //     Direction::Received => &mut recv,
-            // };
-
-            // // Iterate over the ranges backwards, copying the data from the opening
-            // // then truncating it.
-            // for range in ranges.iter_ranges().rev() {
-            //     let start = data.len() - range.len();
-            //     dest[range].copy_from_slice(&data[start..]);
-            //     data.truncate(start);
-            // }
+            expected_hashes.push(opening.recover(&encodings_list.get(&id).unwrap()).hash());
         }
 
         // Verify that the expected hashes are present in the merkle tree.
@@ -271,7 +252,7 @@ impl SubstringsProof {
     pub fn extract_random_values(
         self,
         header: &SessionHeader,
-    ) -> Result<(Vec<Vec<EncodedValue<Full>>>), SubstringsProofError> {
+    ) -> Result<(HashMap<CommitmentId, Vec<EncodedValue<Full>>>), SubstringsProofError> {
         let Self {
             openings,
             inclusion_proof,
@@ -284,7 +265,7 @@ impl SubstringsProof {
         let mut sent_ranges = RangeSet::default();
         let mut recv_ranges = RangeSet::default();
         let mut total_opened = 0u128;
-        let mut encoding_list = Vec::new();
+        let mut encoding_list: HashMap<CommitmentId, Vec<EncodedValue<Full>>> = HashMap::new();
 
         for (id, (info, opening)) in openings {
             let CommitmentInfo {
@@ -342,7 +323,7 @@ impl SubstringsProof {
                 })
                 .collect::<Vec<_>>();
 
-            encoding_list.push(encodings);
+            encoding_list.insert(id, encodings);
 
             // // Compute the expected hash of the commitment to make sure it is
             // // present in the merkle tree.
@@ -350,43 +331,24 @@ impl SubstringsProof {
             // expected_hashes.push(opening.recover(&encodings).hash());
 
             // // Make sure the length of data from the opening matches the commitment.
-            // let mut data = opening.into_data();
-            // if data.len() != ranges.len() {
-            //     return Err(SubstringsProofError::InvalidOpening(id));
-            // }
+            let mut data = opening.into_data();
+            if data.len() != ranges.len() {
+                return Err(SubstringsProofError::InvalidOpening(id));
+            }
 
-            // let dest = match direction {
-            //     Direction::Sent => &mut sent,
-            //     Direction::Received => &mut recv,
-            // };
+            let dest = match direction {
+                Direction::Sent => &mut sent,
+                Direction::Received => &mut recv,
+            };
 
-            // // Iterate over the ranges backwards, copying the data from the opening
-            // // then truncating it.
-            // for range in ranges.iter_ranges().rev() {
-            //     let start = data.len() - range.len();
-            //     dest[range].copy_from_slice(&data[start..]);
-            //     data.truncate(start);
-            // }
+            // Iterate over the ranges backwards, copying the data from the opening
+            // then truncating it.
+            for range in ranges.iter_ranges().rev() {
+                let start = data.len() - range.len();
+                dest[range].copy_from_slice(&data[start..]);
+                data.truncate(start);
+            }
         }
-
-        // Verify that the expected hashes are present in the merkle tree.
-        //
-        // This proves the Prover committed to the purported data prior to the encoder
-        // seed being revealed.
-        // inclusion_proof
-        //     .verify(header.merkle_root(), &indices, &expected_hashes)
-        //     .map_err(|e| SubstringsProofError::InvalidInclusionProof(e.to_string()))?;
-
-        // // Iterate over the unioned ranges and create TranscriptSlices for each.
-        // // This ensures that the slices are sorted and disjoint.
-        // let sent_slices = sent_ranges
-        //     .iter_ranges()
-        //     .map(|range| TranscriptSlice::new(range.clone(), sent[range].to_vec()))
-        //     .collect();
-        // let recv_slices = recv_ranges
-        //     .iter_ranges()
-        //     .map(|range| TranscriptSlice::new(range.clone(), recv[range].to_vec()))
-        //     .collect();
 
         Ok(encoding_list)
     }
@@ -474,23 +436,23 @@ impl SubstringsProof {
             expected_hashes.push(opening.recover(&encodings).hash());
 
             // // Make sure the length of data from the opening matches the commitment.
-            // let mut data = opening.into_data();
-            // if data.len() != ranges.len() {
-            //     return Err(SubstringsProofError::InvalidOpening(id));
-            // }
+            let mut data = opening.into_data();
+            if data.len() != ranges.len() {
+                return Err(SubstringsProofError::InvalidOpening(id));
+            }
 
-            // let dest = match direction {
-            //     Direction::Sent => &mut sent,
-            //     Direction::Received => &mut recv,
-            // };
+            let dest = match direction {
+                Direction::Sent => &mut sent,
+                Direction::Received => &mut recv,
+            };
 
-            // // Iterate over the ranges backwards, copying the data from the opening
-            // // then truncating it.
-            // for range in ranges.iter_ranges().rev() {
-            //     let start = data.len() - range.len();
-            //     dest[range].copy_from_slice(&data[start..]);
-            //     data.truncate(start);
-            // }
+            // Iterate over the ranges backwards, copying the data from the opening
+            // then truncating it.
+            for range in ranges.iter_ranges().rev() {
+                let start = data.len() - range.len();
+                dest[range].copy_from_slice(&data[start..]);
+                data.truncate(start);
+            }
         }
 
         // Verify that the expected hashes are present in the merkle tree.
