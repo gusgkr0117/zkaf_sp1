@@ -5989,6 +5989,7 @@ dependencies = [
 name = "zkaf-script"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "mpz-circuits 0.1.0 (git+https://github.com/privacy-scaling-explorations/mpz?rev=9f7403b)",
  "mpz-core 0.1.0 (git+https://github.com/privacy-scaling-explorations/mpz?rev=9f7403b)",
  "mpz-garble-core 0.1.0 (git+https://github.com/privacy-scaling-explorations/mpz?rev=9f7403b)",

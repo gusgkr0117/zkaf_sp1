@@ -24,14 +24,14 @@ fn precompute_random_values(
     header: &SessionHeader,
     substrings: &SubstringsProof,
 ) -> Result<(), SubstringsProofError> {
-    let random_values_path = "../inputs/random_values.json";
+    let random_values_path = "../inputs/random_values.bin";
     let path = Path::new(random_values_path);
     let mut file = File::create(path).unwrap();
 
     let encoding_list = substrings.clone().extract_random_values(header).unwrap();
-    let test = serde_json::to_string(&encoding_list).unwrap();
+    let test = bincode::serialize(&encoding_list).unwrap();
 
-    file.write_all(test.as_bytes()).unwrap();
+    file.write_all(&test).unwrap();
     Ok(())
 }
 

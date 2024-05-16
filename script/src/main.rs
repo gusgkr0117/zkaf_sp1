@@ -28,36 +28,39 @@ fn main() {
         serde_json::to_string(&proof_params.substrings).unwrap(),
     );
 
-    let input3 = std::fs::read_to_string("../inputs/random_values.json").unwrap();
+    let input3 = std::fs::read("../inputs/random_values.bin").unwrap();
 
     stdin.write(&input1);
     stdin.write(&input2);
     stdin.write(&input3);
+    // stdin.write(&String::new());
+    // stdin.write(&String::new());
+    // stdin.write(&String::new());
 
     setup_logger();
 
-    // let cycles = get_cycles(&ELF, &stdin);
-    // println!("Total cycles : {}", cycles);
+    let cycles = get_cycles(&ELF, &stdin);
+    println!("Total cycles : {}", cycles);
 
-    let client = ProverClient::new();
+    // let client = ProverClient::new();
     // let mut public_values = client.execute(ELF, stdin).unwrap();
-    let (pk, vk) = client.setup(ELF);
-    let proof = client.prove_groth16(&pk, stdin).expect("proving failed");
+    // let (pk, vk) = client.setup(ELF);
+    // let proof = client.prove_groth16(&pk, stdin).expect("proving failed");
 
-    // Read output.
-    // let c: String = public_values.read::<String>();
-    // println!("req: {}", c);
-    println!("successfully executed the program!");
+    // // Read output.
+    // // let c: String = public_values.read::<String>();
+    // // println!("req: {}", c);
+    // println!("successfully executed the program!");
 
-    // Verify proof.
-    client
-        .verify_groth16(&proof, &vk)
-        .expect("verification failed");
+    // // Verify proof.
+    // client
+    //     .verify_groth16(&proof, &vk)
+    //     .expect("verification failed");
 
-    // // Save proof.
-    proof
-        .save("groth16-proof-with-pis.json")
-        .expect("saving proof failed");
+    // // // Save proof.
+    // proof
+    //     .save("groth16-proof-with-pis.json")
+    //     .expect("saving proof failed");
 
     println!("successfully generated and verified proof for the program!")
 }
