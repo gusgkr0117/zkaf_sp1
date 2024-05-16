@@ -5989,6 +5989,9 @@ dependencies = [
 name = "zkaf-script"
 version = "0.1.0"
 dependencies = [
+ "mpz-circuits 0.1.0 (git+https://github.com/privacy-scaling-explorations/mpz?rev=9f7403b)",
+ "mpz-core 0.1.0 (git+https://github.com/privacy-scaling-explorations/mpz?rev=9f7403b)",
+ "mpz-garble-core 0.1.0 (git+https://github.com/privacy-scaling-explorations/mpz?rev=9f7403b)",
  "p256",
  "serde",
  "serde_json",
@@ -5998,6 +6001,7 @@ dependencies = [
  "sp1-sdk",
  "tlsn-core",
  "tlsn-substrings-verifier",
+ "tlsn-utils 0.1.0 (git+https://github.com/tlsnotary/tlsn-utils?rev=51f313d)",
 ]
 
 [[package]]
