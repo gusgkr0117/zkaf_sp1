@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use sp1_helper::build_program;
 use std::fs::{self, File};
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use mpz_circuits::types::ValueType;
 use mpz_core::hash::Hash;
@@ -24,8 +24,9 @@ fn precompute_random_values(
     header: &SessionHeader,
     substrings: &SubstringsProof,
 ) -> Result<(), SubstringsProofError> {
+    let base_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let random_values_path = "../inputs/random_values.bin";
-    let path = Path::new(random_values_path);
+    let path = base_path.join(random_values_path);
     let mut file = File::create(path).unwrap();
 
     let encoding_list = substrings.clone().extract_random_values(header).unwrap();
@@ -36,7 +37,8 @@ fn precompute_random_values(
 }
 
 fn build_proof() -> Result<(), Box<dyn std::error::Error>> {
-    let proof = std::fs::read_to_string("./fixtures/twitter_proof.json").unwrap();
+    let base_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let proof = std::fs::read_to_string(base_path.join("fixtures/twitter_proof.json")).unwrap();
     let proof: TlsProof = serde_json::from_str(proof.as_str()).unwrap();
 
     let TlsProof {
@@ -68,7 +70,7 @@ fn build_proof() -> Result<(), Box<dyn std::error::Error>> {
     let dummy = serde_json::to_string(&header).unwrap();
     let my_header: SessionHeader = serde_json::from_str(dummy.as_str()).unwrap();
 
-    precompute_random_values(&my_header, &my_substrings);
+    precompute_random_values(&my_header, &my_substrings)?;
 
     // type conversion occurs here
     // we need to convert from the tlsn core definitions to the definitions from the verifier
@@ -80,7 +82,7 @@ fn build_proof() -> Result<(), Box<dyn std::error::Error>> {
     let json = serde_json::to_string(&params)?;
 
     let file_path = "../inputs/zk_params.json";
-    let path = Path::new(file_path);
+    let path = base_path.join(file_path);
     // Check if the parent directory exists, and create it if it does not.
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
@@ -100,5 +102,5 @@ fn notary_pubkey() -> p256::PublicKey {
 
 fn main() {
     let _ = build_proof();
-    //build_program("../program")
+    build_program("../program")
 }

@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["tlsn-substrings-verifier", "program", "script"]
+exclude = ["program"]
+members = ["script", "tlsn-substrings-verifier"]
 
 [profile.dev]
 opt-level = 3
